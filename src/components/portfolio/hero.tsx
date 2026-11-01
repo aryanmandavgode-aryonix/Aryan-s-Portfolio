@@ -2,6 +2,7 @@
 
 import { motion, useReducedMotion, type Variants } from "framer-motion";
 import { ArrowDown, ArrowUpRight, MapPin } from "lucide-react";
+import Image from "next/image";
 import { personalInfo } from "@/lib/portfolio";
 
 const container: Variants = {
@@ -21,9 +22,20 @@ const item: Variants = {
 function HeroContent() {
   return (
     <>
+      <motion.div variants={item}>
+        <Image
+          src={personalInfo.avatar}
+          alt="Portrait of Aryan Mandavgode"
+          width={160}
+          height={160}
+          priority
+          className="size-16 rounded-full object-cover ring-1 ring-zinc-950/10 sm:size-20"
+        />
+      </motion.div>
+
       <motion.p
         variants={item}
-        className="inline-flex items-center gap-2.5 rounded-full border border-zinc-200 bg-white py-1.5 pl-3 pr-4 text-xs font-medium text-zinc-600 shadow-[0_1px_2px_rgba(0,0,0,0.04)]"
+        className="mt-7 inline-flex items-center gap-2.5 rounded-full border border-zinc-200 bg-white py-1.5 pl-3 pr-4 text-xs font-medium text-zinc-600 shadow-[0_1px_2px_rgba(0,0,0,0.04)]"
       >
         <span className="relative flex size-2">
           <span

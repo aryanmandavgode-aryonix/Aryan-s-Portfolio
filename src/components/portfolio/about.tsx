@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { Reveal } from "@/components/portfolio/reveal";
 import { SectionHeading } from "@/components/portfolio/section-heading";
 import { personalInfo } from "@/lib/portfolio";
@@ -30,6 +31,17 @@ export function About() {
                 </span>
               }
             />
+            <Reveal delay={0.1} className="mt-10">
+              <div className="group relative aspect-[3/4] w-full max-w-sm overflow-hidden rounded-3xl border border-zinc-200 bg-zinc-100">
+                <Image
+                  src={personalInfo.avatar}
+                  alt="Portrait of Aryan Mandavgode in his university blazer"
+                  fill
+                  sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
+                  className="object-cover transition-transform duration-700 ease-out group-hover:scale-[1.02] motion-reduce:transform-none"
+                />
+              </div>
+            </Reveal>
           </div>
 
           <div className="space-y-10 lg:col-span-7">

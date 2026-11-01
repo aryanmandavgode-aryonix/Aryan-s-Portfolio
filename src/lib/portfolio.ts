@@ -7,6 +7,7 @@
 export const personalInfo = {
   name: "Aryan Mandavgode",
   firstName: "Aryan",
+  avatar: "/images/profile.jpg",
   title: "Full-Stack Developer | Founder of ARYONIX",
   headline: "Building digital experiences that make an impact.",
   intro:
