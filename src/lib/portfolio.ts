@@ -12,6 +12,7 @@ export const personalInfo = {
   intro:
     "I'm Aryan, a Computer Science Engineering student, Full-Stack Developer, and Founder of ARYONIX. I design and build modern websites, applications, and digital products.",
   email: "aryanmandavgode@gmail.com",
+  whatsappNumber: "919359368382", // +91 93593 68382 — wa.me requires full international format
   location: "Pune, Maharashtra, India",
   shortLocation: "Pune, India",
   education: "B.Tech Computer Science Engineering",

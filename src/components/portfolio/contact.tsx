@@ -5,11 +5,9 @@ import {
   AlertCircle,
   ArrowUpRight,
   Check,
-  CheckCircle2,
   Copy,
   Github,
   Linkedin,
-  Loader2,
   Mail,
   Send,
 } from "lucide-react";
@@ -25,8 +23,6 @@ type FormValues = {
 };
 
 type FormErrors = Partial<Record<keyof FormValues, string>>;
-
-type Status = "idle" | "sending" | "success" | "error";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -47,6 +43,31 @@ function validate(values: FormValues): FormErrors {
   return errors;
 }
 
+/**
+ * Builds the pre-filled WhatsApp message in the exact format Aryan expects,
+ * encoded for the Click to Chat URL (wa.me).
+ */
+function buildWhatsAppUrl(values: FormValues): string {
+  const message = [
+    "Hello Aryan!",
+    "",
+    "I found your portfolio website and would like to connect with you.",
+    "",
+    `*Name:* ${values.name.trim()}`,
+    "",
+    `*Email:* ${values.email.trim()}`,
+    "",
+    `*Subject:* ${values.subject.trim()}`,
+    "",
+    "*Message:*",
+    values.message.trim(),
+    "",
+    "Looking forward to hearing from you!",
+  ].join("\n");
+
+  return `https://wa.me/${personalInfo.whatsappNumber}?text=${encodeURIComponent(message)}`;
+}
+
 const inputClasses =
   "w-full rounded-xl border border-zinc-300 bg-white px-4 py-3 text-[15px] text-zinc-950 placeholder:text-zinc-400 transition-colors focus:border-zinc-950 focus:outline-none focus:ring-2 focus:ring-zinc-950/10 aria-[invalid=true]:border-red-400 aria-[invalid=true]:focus:ring-red-400/10";
 
@@ -58,9 +79,6 @@ export function Contact() {
     message: "",
   });
   const [errors, setErrors] = useState<FormErrors>({});
-  const [status, setStatus] = useState<Status>("idle");
-  const [serverError, setServerError] = useState<string>("");
-  const [notConfigured, setNotConfigured] = useState(false);
   const [copied, setCopied] = useState(false);
   const formRef = useRef<HTMLFormElement>(null);
   const copyTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -85,8 +103,15 @@ export function Contact() {
     }
   };
 
-  const onSubmit = async (event: FormEvent<HTMLFormElement>) => {
+  const onSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+
+    // Honeypot filled → almost certainly a bot. Do nothing.
+    const honeypot = formRef.current?.querySelector<HTMLInputElement>(
+      "#contact-company"
+    );
+    if (honeypot && honeypot.value.trim().length > 0) return;
+
     const validation = validate(values);
     setErrors(validation);
     if (Object.keys(validation).length > 0) {
@@ -97,38 +122,16 @@ export function Contact() {
       return;
     }
 
-    setStatus("sending");
-    setServerError("");
-    setNotConfigured(false);
-
-    try {
-      const res = await fetch("/api/contact", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(values),
-      });
-      const data = (await res.json().catch(() => ({}))) as {
-        ok?: boolean;
-        error?: string;
-        notConfigured?: boolean;
-      };
-
-      if (res.ok && data.ok) {
-        setStatus("success");
-        setValues({ name: "", email: "", subject: "", message: "" });
-      } else {
-        setStatus("error");
-        setNotConfigured(Boolean(data.notConfigured));
-        setServerError(
-          data.error ??
-            "Something went wrong while sending your message. Please try again."
-        );
-      }
-    } catch {
-      setStatus("error");
-      setServerError(
-        "Network error — please check your connection and try again."
-      );
+    const url = buildWhatsAppUrl(values);
+    // Opens WhatsApp Web / the WhatsApp app in a new tab, message pre-filled.
+    // Note: window.open() with the "noopener" feature always returns null,
+    // so we sever the opener reference manually to detect popup blocking.
+    const win = window.open(url, "_blank");
+    if (win) {
+      win.opener = null;
+    } else {
+      // Popup blocked — fall back to navigating in the same tab.
+      window.location.href = url;
     }
   };
 
@@ -227,215 +230,161 @@ export function Contact() {
           {/* Right: form */}
           <Reveal delay={0.15} className="lg:col-span-7">
             <div className="rounded-3xl border border-zinc-200 bg-white p-6 shadow-[0_1px_3px_rgba(0,0,0,0.04)] sm:p-8 lg:p-10">
-              {status === "success" ? (
-                <div
-                  role="status"
-                  className="flex min-h-[26rem] flex-col items-center justify-center text-center"
-                >
-                  <span className="flex size-14 items-center justify-center rounded-full border border-emerald-200 bg-emerald-50">
-                    <CheckCircle2 className="size-7 text-emerald-600" aria-hidden="true" />
-                  </span>
-                  <h3 className="mt-6 text-xl font-semibold tracking-tight text-zinc-950">
-                    Message sent.
-                  </h3>
-                  <p className="mt-2 max-w-sm text-pretty text-[15px] leading-relaxed text-zinc-600">
-                    Thanks for reaching out — I&apos;ll get back to you at the
-                    email you provided, usually within a day.
-                  </p>
-                  <button
-                    type="button"
-                    onClick={() => setStatus("idle")}
-                    className="mt-8 inline-flex min-h-11 items-center rounded-full border border-zinc-300 px-6 py-2.5 text-sm font-medium text-zinc-950 transition-colors hover:border-zinc-950"
-                  >
-                    Send another message
-                  </button>
-                </div>
-              ) : (
-                <form ref={formRef} onSubmit={onSubmit} noValidate>
-                  <h3 className="text-lg font-semibold tracking-tight text-zinc-950">
-                    Send a message
-                  </h3>
-                  <p className="mt-1 text-sm text-zinc-500">
-                    All fields are required.
-                  </p>
+              <form ref={formRef} onSubmit={onSubmit} noValidate>
+                <h3 className="text-lg font-semibold tracking-tight text-zinc-950">
+                  Send a message
+                </h3>
+                <p className="mt-1 text-sm text-zinc-500">
+                  All fields are required.
+                </p>
 
-                  <div className="mt-7 grid gap-5 sm:grid-cols-2">
-                    <div>
-                      <label
-                        htmlFor="contact-name"
-                        className="mb-1.5 block text-sm font-medium text-zinc-700"
-                      >
-                        Full Name
-                      </label>
-                      <input
-                        id="contact-name"
-                        name="name"
-                        type="text"
-                        autoComplete="name"
-                        placeholder="Your name"
-                        value={values.name}
-                        onChange={setField("name")}
-                        aria-invalid={Boolean(errors.name)}
-                        aria-describedby={errors.name ? "contact-name-error" : undefined}
-                        className={inputClasses}
-                      />
-                      {errors.name ? (
-                        <p
-                          id="contact-name-error"
-                          className="mt-1.5 flex items-center gap-1 text-xs text-red-600"
-                        >
-                          <AlertCircle className="size-3.5" aria-hidden="true" />
-                          {errors.name}
-                        </p>
-                      ) : null}
-                    </div>
-
-                    <div>
-                      <label
-                        htmlFor="contact-email"
-                        className="mb-1.5 block text-sm font-medium text-zinc-700"
-                      >
-                        Email
-                      </label>
-                      <input
-                        id="contact-email"
-                        name="email"
-                        type="email"
-                        autoComplete="email"
-                        placeholder="you@example.com"
-                        value={values.email}
-                        onChange={setField("email")}
-                        aria-invalid={Boolean(errors.email)}
-                        aria-describedby={errors.email ? "contact-email-error" : undefined}
-                        className={inputClasses}
-                      />
-                      {errors.email ? (
-                        <p
-                          id="contact-email-error"
-                          className="mt-1.5 flex items-center gap-1 text-xs text-red-600"
-                        >
-                          <AlertCircle className="size-3.5" aria-hidden="true" />
-                          {errors.email}
-                        </p>
-                      ) : null}
-                    </div>
-                  </div>
-
-                  <div className="mt-5">
+                <div className="mt-7 grid gap-5 sm:grid-cols-2">
+                  <div>
                     <label
-                      htmlFor="contact-subject"
+                      htmlFor="contact-name"
                       className="mb-1.5 block text-sm font-medium text-zinc-700"
                     >
-                      Subject
+                      Full Name
                     </label>
                     <input
-                      id="contact-subject"
-                      name="subject"
+                      id="contact-name"
+                      name="name"
                       type="text"
-                      placeholder="What is this about?"
-                      value={values.subject}
-                      onChange={setField("subject")}
-                      aria-invalid={Boolean(errors.subject)}
-                      aria-describedby={errors.subject ? "contact-subject-error" : undefined}
+                      autoComplete="name"
+                      placeholder="Your name"
+                      value={values.name}
+                      onChange={setField("name")}
+                      aria-invalid={Boolean(errors.name)}
+                      aria-describedby={errors.name ? "contact-name-error" : undefined}
                       className={inputClasses}
                     />
-                    {errors.subject ? (
+                    {errors.name ? (
                       <p
-                        id="contact-subject-error"
+                        id="contact-name-error"
                         className="mt-1.5 flex items-center gap-1 text-xs text-red-600"
                       >
                         <AlertCircle className="size-3.5" aria-hidden="true" />
-                        {errors.subject}
+                        {errors.name}
                       </p>
                     ) : null}
                   </div>
 
-                  <div className="mt-5">
+                  <div>
                     <label
-                      htmlFor="contact-message"
+                      htmlFor="contact-email"
                       className="mb-1.5 block text-sm font-medium text-zinc-700"
                     >
-                      Message
+                      Email
                     </label>
-                    <textarea
-                      id="contact-message"
-                      name="message"
-                      rows={5}
-                      placeholder="Tell me about your project, timeline, and goals…"
-                      value={values.message}
-                      onChange={setField("message")}
-                      aria-invalid={Boolean(errors.message)}
-                      aria-describedby={errors.message ? "contact-message-error" : undefined}
-                      className={cn(inputClasses, "resize-y min-h-[8rem]")}
+                    <input
+                      id="contact-email"
+                      name="email"
+                      type="email"
+                      autoComplete="email"
+                      placeholder="you@example.com"
+                      value={values.email}
+                      onChange={setField("email")}
+                      aria-invalid={Boolean(errors.email)}
+                      aria-describedby={errors.email ? "contact-email-error" : undefined}
+                      className={inputClasses}
                     />
-                    {errors.message ? (
+                    {errors.email ? (
                       <p
-                        id="contact-message-error"
+                        id="contact-email-error"
                         className="mt-1.5 flex items-center gap-1 text-xs text-red-600"
                       >
                         <AlertCircle className="size-3.5" aria-hidden="true" />
-                        {errors.message}
+                        {errors.email}
                       </p>
                     ) : null}
                   </div>
+                </div>
 
-                  {/* Honeypot — hidden from humans, catches bots */}
-                  <div className="absolute -left-[9999px] top-auto" aria-hidden="true">
-                    <label htmlFor="contact-company">Company</label>
-                    <input
-                      id="contact-company"
-                      name="company"
-                      type="text"
-                      tabIndex={-1}
-                      autoComplete="off"
-                    />
-                  </div>
-
-                  {status === "error" ? (
-                    <div
-                      role="alert"
-                      className="mt-6 rounded-xl border border-red-200 bg-red-50 px-4 py-3"
-                    >
-                      <p className="flex items-start gap-2 text-sm text-red-700">
-                        <AlertCircle className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
-                        <span>
-                          {serverError}{" "}
-                          {notConfigured ? null : (
-                            <>
-                              You can also email me directly at{" "}
-                              <a
-                                href={`mailto:${personalInfo.email}`}
-                                className="font-medium underline underline-offset-2"
-                              >
-                                {personalInfo.email}
-                              </a>
-                              .
-                            </>
-                          )}
-                        </span>
-                      </p>
-                    </div>
-                  ) : null}
-
-                  <button
-                    type="submit"
-                    disabled={status === "sending"}
-                    className="mt-8 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-zinc-950 px-6 py-3 text-sm font-medium text-white transition-colors hover:bg-zinc-700 disabled:cursor-not-allowed disabled:opacity-70 sm:w-auto sm:px-10"
+                <div className="mt-5">
+                  <label
+                    htmlFor="contact-subject"
+                    className="mb-1.5 block text-sm font-medium text-zinc-700"
                   >
-                    {status === "sending" ? (
-                      <>
-                        <Loader2 className="size-4 animate-spin" aria-hidden="true" />
-                        Sending…
-                      </>
-                    ) : (
-                      <>
-                        <Send className="size-4" aria-hidden="true" />
-                        Send Message
-                      </>
-                    )}
-                  </button>
-                </form>
-              )}
+                    Subject
+                  </label>
+                  <input
+                    id="contact-subject"
+                    name="subject"
+                    type="text"
+                    placeholder="What is this about?"
+                    value={values.subject}
+                    onChange={setField("subject")}
+                    aria-invalid={Boolean(errors.subject)}
+                    aria-describedby={errors.subject ? "contact-subject-error" : undefined}
+                    className={inputClasses}
+                  />
+                  {errors.subject ? (
+                    <p
+                      id="contact-subject-error"
+                      className="mt-1.5 flex items-center gap-1 text-xs text-red-600"
+                    >
+                      <AlertCircle className="size-3.5" aria-hidden="true" />
+                      {errors.subject}
+                    </p>
+                  ) : null}
+                </div>
+
+                <div className="mt-5">
+                  <label
+                    htmlFor="contact-message"
+                    className="mb-1.5 block text-sm font-medium text-zinc-700"
+                  >
+                    Message
+                  </label>
+                  <textarea
+                    id="contact-message"
+                    name="message"
+                    rows={5}
+                    placeholder="Tell me about your project, timeline, and goals…"
+                    value={values.message}
+                    onChange={setField("message")}
+                    aria-invalid={Boolean(errors.message)}
+                    aria-describedby={errors.message ? "contact-message-error" : undefined}
+                    className={cn(inputClasses, "resize-y min-h-[8rem]")}
+                  />
+                  {errors.message ? (
+                    <p
+                      id="contact-message-error"
+                      className="mt-1.5 flex items-center gap-1 text-xs text-red-600"
+                    >
+                      <AlertCircle className="size-3.5" aria-hidden="true" />
+                      {errors.message}
+                    </p>
+                  ) : null}
+                </div>
+
+                {/* Honeypot — hidden from humans, catches bots */}
+                <div className="absolute -left-[9999px] top-auto" aria-hidden="true">
+                  <label htmlFor="contact-company">Company</label>
+                  <input
+                    id="contact-company"
+                    name="company"
+                    type="text"
+                    tabIndex={-1}
+                    autoComplete="off"
+                  />
+                </div>
+
+                <button
+                  type="submit"
+                  className="group mt-8 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-zinc-950 px-6 py-3 text-sm font-medium text-white transition-all duration-200 hover:-translate-y-0.5 hover:bg-zinc-800 hover:shadow-[0_10px_24px_rgba(0,0,0,0.18)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-950/30 focus-visible:ring-offset-2 motion-reduce:transition-none motion-reduce:hover:translate-y-0 sm:w-auto sm:px-10"
+                >
+                  <Send
+                    className="size-4 transition-transform duration-200 group-hover:translate-x-0.5 motion-reduce:transition-none"
+                    aria-hidden="true"
+                  />
+                  Send Message
+                </button>
+                <p className="mt-3 text-xs leading-relaxed text-zinc-500">
+                  You&apos;ll be redirected to WhatsApp with your message
+                  pre-filled — just press send.
+                </p>
+              </form>
             </div>
           </Reveal>
         </div>
