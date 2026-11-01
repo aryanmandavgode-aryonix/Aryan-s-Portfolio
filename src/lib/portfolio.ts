@@ -83,12 +83,36 @@ export const projects: readonly Project[] = [
     title: "ARYONIX",
     description:
       "A digital development agency focused on websites, applications, software, and SaaS products.",
-    image: "/images/project-aryonix.png",
+    image: "/images/project-aryonix-website.png",
     tags: ["Next.js", "React", "Tailwind CSS", "Node.js"],
     href: "https://www.aryonix.in/",
     linkLabel: "View Project",
     status: "Live",
     featured: true,
+  },
+  {
+    title: "New Dimension",
+    description:
+      "A cinematic website redesign concept for New Dimension, an interior design studio in Nagpur — prepared by ARYONIX as a prospective-client demonstration.",
+    image: "/images/project-new-dimension-website.png",
+    tags: ["Next.js", "TypeScript", "Tailwind CSS", "Framer Motion"],
+    status: "Concept",
+  },
+  {
+    title: "Waffle Castle",
+    description:
+      "A premium homepage concept built for Waffle Castle Nagpur, featuring the store's real menu board, dishes, and location.",
+    image: "/images/project-waffle-castle.png",
+    tags: ["Next.js", "TypeScript", "Tailwind CSS", "UI/UX Design"],
+    status: "Concept",
+  },
+  {
+    title: "Rockfold Fitness",
+    description:
+      "A cinematic single-page website concept for a fitness studio in Wagholi, Pune — built around bold typography and a premium visual identity.",
+    image: "/images/project-rockfold-fitness.png",
+    tags: ["HTML5", "CSS3", "JavaScript", "Responsive Design"],
+    status: "Concept",
   },
   {
     title: "AgencyOS",
@@ -97,14 +121,6 @@ export const projects: readonly Project[] = [
     image: "/images/project-agencyos.png",
     tags: ["Next.js", "TypeScript", "Prisma", "REST APIs"],
     status: "In Development",
-  },
-  {
-    title: "New Dimension",
-    description:
-      "A modern business website concept designed to establish a strong digital presence.",
-    image: "/images/project-new-dimension.png",
-    tags: ["HTML5", "CSS3", "JavaScript", "Responsive Design"],
-    status: "Concept",
   },
   {
     title: "Elevate Fitness",

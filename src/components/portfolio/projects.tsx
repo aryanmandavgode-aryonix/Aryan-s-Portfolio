@@ -150,7 +150,7 @@ export function Projects() {
               <span className="font-serif font-normal italic">work.</span>
             </span>
           }
-          description="Products and websites I've designed and built — from running a digital agency to exploring SaaS ideas."
+          description="Websites and products designed and built through ARYONIX — live client work, concept demos, and works in progress."
         />
 
         <div className="mt-14 space-y-6">
