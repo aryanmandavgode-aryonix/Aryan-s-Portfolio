@@ -114,30 +114,6 @@ export const projects: readonly Project[] = [
     tags: ["HTML5", "CSS3", "JavaScript", "Responsive Design"],
     status: "Concept",
   },
-  {
-    title: "AgencyOS",
-    description:
-      "A SaaS concept designed to streamline agency operations, project management, clients, and workflows.",
-    image: "/images/project-agencyos.png",
-    tags: ["Next.js", "TypeScript", "Prisma", "REST APIs"],
-    status: "In Development",
-  },
-  {
-    title: "Elevate Fitness",
-    description:
-      "A modern fitness website concept with a premium visual identity and responsive experience.",
-    image: "/images/project-elevate-fitness.png",
-    tags: ["React", "Tailwind CSS", "UI/UX Design"],
-    status: "Concept",
-  },
-  {
-    title: "Fitniq",
-    description:
-      "A gym website development project focused on presenting fitness services and membership information.",
-    image: "/images/project-fitniq.png",
-    tags: ["HTML5", "CSS3", "JavaScript", "Web Design"],
-    status: "Live",
-  },
 ] as const;
 
 export const experience = [
